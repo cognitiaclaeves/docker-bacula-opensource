@@ -26,7 +26,7 @@
 : ${DB_USER:="postgres"}
 : ${DB_HOST:="bacula-db"}
 : ${DB_NAME:="bacula"}
-: ${LOG_FILE:="/opt/bacula/log/bacula.log"}
+: ${LOG_FILE:="/var/log/bacula.log"}
 
 echo "==> Looking for new plugins"
 _plugins=`ls -1 /plugins`
@@ -56,16 +56,16 @@ if psql -h ${DB_HOST} -U ${DB_USER} -lqt | cut -d\| -f1 | grep -qw ${DB_NAME}; t
     echo "=> Database already setup; skipping."
 else
     db_name=${DB_NAME}
-    /opt/bacula/scripts/create_postgresql_database -h ${DB_HOST} -U ${DB_USER}
+    /usr/libexec/bacula/create_postgresql_database -h ${DB_HOST} -U ${DB_USER}
     echo "==> Setting database encoding to SQL_ASCII"
     psql -h ${DB_HOST} -U ${DB_USER} -c "UPDATE pg_database SET encoding = pg_char_to_encoding('SQL_ASCII') WHERE datname = '${DB_NAME}'"
-    /opt/bacula/scripts/make_postgresql_tables -h ${DB_HOST} -U ${DB_USER}
-    /opt/bacula/scripts/grant_postgresql_privileges -h ${DB_HOST} -U ${DB_USER}
+    /usr/libexec/bacula/make_postgresql_tables -h ${DB_HOST} -U ${DB_USER}
+    /usr/libexec/bacula/grant_postgresql_privileges -h ${DB_HOST} -U ${DB_USER}
     unset db_name
 fi
 
 # echo "==> Verifying Bacula DIR configuration"
-# /opt/bacula/bin/bacula-dir -c /opt/bacula/etc/bacula-dir.conf -t
+/usr/sbin/bacula-dir -c /opt/bacula/etc/bacula-dir.conf -t
 
 # The database setup created the logfile, but bacula-dir running as an unprivileged
 # user cannot append to the logfile anymore.
@@ -78,7 +78,7 @@ unset ${DB_PASSWORD}
 # still using -f. This way we can run both commands simultaniously in the
 # foreground.
 echo "==> Starting Bacula FD"
-/opt/bacula/bin/bacula-fd -c /opt/bacula/etc/bacula-fd.conf -d ${BACULA_DEBUG} -f &
+/usr/sbin/bacula-fd -c /opt/bacula/etc/bacula-fd.conf -d ${BACULA_DEBUG} -f &
 
 echo "==> Starting Bacula DIR"
-sudo -u bacula /opt/bacula/bin/bacula-dir -c /opt/bacula/etc/bacula-dir.conf -d ${BACULA_DEBUG} -f
+sudo -u bacula /usr/sbin/bacula-dir -c /opt/bacula/etc/bacula-dir.conf -d ${BACULA_DEBUG} -f

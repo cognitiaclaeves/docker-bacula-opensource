@@ -8,7 +8,7 @@ LABEL com.baculasystems.bacula.version="${BACULA_VERSION}" \
 ENV BACULA_COMPONENTS "bacula-libs bacula-common bacula-libs-sql bacula-client bacula-director bacula-console"
 
 # Install customer's repository information
-ADD configs/bacula.repo /etc/yum.repos.d
+ADD configs/epel-bacula7.repo /etc/yum.repos.d
 
 RUN yum -q -y update && \
     yum -q -y install postgresql sudo
@@ -17,14 +17,14 @@ RUN for b in ${BACULA_COMPONENTS}; do yum -y install $b; done
 RUN sed -i -e "s/Defaults    requiretty.*/ #Defaults    requiretty/g" /etc/sudoers
 
 # Cleanup caches and repository information
-RUN yum clean all; rm -f /etc/yum.repos.d/bacula.repo
+RUN yum clean all; rm -f /etc/yum.repos.d/epel-bacula7.repo
 
 # Add Bacula to path so running 'docker exec -ti ... bconsole' works
 ENV PATH=$PATH:/opt/bacula/bin
 
 ADD scripts/run.sh /
 
-RUN chmod +x /run.sh
+RUN chmod +x /run.sh; chgrp bacula run; chmod g+w run; mkdir -p /opt/bacula/working; chown bacula: /opt/bacula/working
 
 ENTRYPOINT ["/run.sh"]
 

@@ -2,6 +2,8 @@
 *~
 *.orig
 backups
-*.repo
-configs
+# *.repo
+# configs
 !bacula-fd/configs/
+.sw?
+
